@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "ProjectMap": {
+    "e32b45f8-749d-43ee-83f8-880fa9723053": {
+      "ProjectGuid": "e32b45f8-749d-43ee-83f8-880fa9723053",
+      "DisplayName": "currencyConvertor",
+      "ColorIndex": 0
+    }
+  },
+  "NextColorIndex": 1
+}

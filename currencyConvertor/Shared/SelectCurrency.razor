@@ -1,0 +1,23 @@
+@using currencyConvertor.Models
+@using currencyConvertor.Controllers
+@foreach (var currency in Currencies)
+{
+    <option value="@currency.Id">@currency.Id ()</option>
+}
+
+@code {
+        const string ApiKey = "514e442b62828360d293";
+    private List<Currency>? Currencies;
+    private double NewConvertedAmount = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Currencies = await GetAllCurrencies();
+    }
+
+    private static async Task<List<Currency>> GetAllCurrencies()
+    {
+        return await RequestHelper.GetAllCurrencies(ApiKey);
+    }
+
+}

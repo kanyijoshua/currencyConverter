@@ -1,0 +1,49 @@
+﻿@page "/logsdata"
+
+<PageTitle>Currency Conversion logs</PageTitle>
+@using currencyConvertor.Models
+@inject LogsService _logsService
+
+<h1>currency conversion logs</h1>
+
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>From Currency</th>
+        <th>To Currency</th>
+        <th>Time of Conversion</th>
+    </tr>
+    </thead>
+    <tbody>
+
+    @foreach (var log in _logs)
+    {
+        <tr>
+            @if (_logs == null)
+            {
+                <td rowspan="3">
+                    <em>Loading...</em>
+                </td>
+            }
+            else
+            {
+                <td>@log.CurrencyFrom</td>
+                <td>@log.CurrencyTo</td>
+                <td>@log.DateTime.ToString("f")</td>
+            }
+        </tr>
+    }
+    </tbody>
+</table>
+
+
+@code {
+    private Logs[]? _logs;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _logs = await _logsService.GetLogsAsync(DateTime.Now, DateTime.Now.AddDays(1));
+    }
+
+}

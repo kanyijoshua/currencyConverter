@@ -1,0 +1,122 @@
+@page "/"
+@using currencyConvertor.Models
+@using currencyConvertor.Controllers
+
+<PageTitle>Convert Currency</PageTitle>
+
+<h1>Currency Converter</h1>
+<div class="d-flex align-content-center">
+    <div class="form-group" style="width: 30%;margin-right: 2%">
+        <label >Amount</label>
+        <input type="number" @oninput="Convert" @bind="Amount" step="1" min="0" class="form-control">
+    </div>
+    <div class="form-group" style="width: 30%;margin-right: 2%">
+        <label >From</label>
+        @*@bind-Value="Employee.Gender"*@
+        <select @onchange="SelectFromCurrency" class="form-select">
+            @if (Currencies != null)
+            {
+                foreach (var currency in Currencies)
+                {
+                    if (currency == Currencies.FirstOrDefault())
+                    {
+                        <option value="@currency.Id" selected="">@currency.Id (@currency.CurrencyName) @currency.CurrencySymbol </option>
+                    }
+                    else
+                    {
+                        <option value="@currency.Id">@currency.Id (@currency.CurrencyName) @currency.CurrencySymbol </option>
+                    }
+                } 
+            }
+            else
+            {
+                <option>Loading currencies.....</option>
+            }
+        </select>
+    </div>
+    <div class="form-group" style="width: 30%;margin-right: 2%">
+        <label >To</label>
+        <select @onchange="SelectToCurrency" class="form-select">
+            @*Enum.GetValues(typeof(CurrencyType))*@
+            @if (Currencies != null)
+            {
+                foreach (var currency in Currencies)
+                {
+                    if (currency == Currencies.FirstOrDefault())
+                    {
+                        <option value="@currency.Id" selected="">@currency.Id (@currency.CurrencyName) @currency.CurrencySymbol </option>
+                    }
+                    else
+                    {
+                        <option value="@currency.Id">@currency.Id (@currency.CurrencyName) @currency.CurrencySymbol </option>
+                    }
+                } 
+            }
+            else
+            {
+                <option>Loading currencies.....</option>
+            }
+            
+            </select>
+    </div>
+</div>
+<ConvertDiplay NewConvertedAmount="@NewConvertedAmount" ToCurrency="@ToCurrency" FromCurrency ="@FromCurrency" Amount="@Amount" Loading="@Loading"/>
+@code
+{
+    const string ApiKey = "514e442b62828360d293";
+    private decimal Amount { get; set; } = 1;
+    private string? FromCurrency { get; set; }
+    private string? ToCurrency { get; set; }
+    private List<Currency>? Currencies;
+    private double NewConvertedAmount = 0;
+    bool Loading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Currencies =await GetAllCurrencies();
+        FromCurrency = Currencies.FirstOrDefault()?.Id;
+        ToCurrency = Currencies.FirstOrDefault()?.Id;
+        Loading = true;
+        await Convert();
+    }
+
+    private async Task Convert()
+    {
+        Loading = true;
+        var convertedAmount =await Convert((double) Amount,FromCurrency,ToCurrency);
+        NewConvertedAmount = convertedAmount;
+        await _context.Logs.AddAsync(new Logs
+        {
+            CurrencyFrom = $"{FromCurrency} {Amount}",
+            CurrencyTo = $"{ToCurrency} {convertedAmount}",
+            DateTime = DateTime.Now
+        });
+        await _context.SaveChangesAsync();
+        Loading = false;
+    }
+
+    async Task SelectFromCurrency (ChangeEventArgs e)
+    {
+        if (e.Value != null)
+            FromCurrency = e.Value.ToString();
+                //Enum.Parse<CurrencyType>( e.Value.ToString() ?? "ALL");
+        await Convert();
+    }
+
+    async Task SelectToCurrency (ChangeEventArgs e)
+    {
+        if (e.Value!= null) 
+            ToCurrency = e.Value.ToString();
+        await Convert();
+    }
+
+    private static async Task<List<Currency>> GetAllCurrencies()
+    {
+        return await RequestHelper.GetAllCurrencies(ApiKey);
+    }
+
+    private static async Task<double> Convert(double amount, string from, string to)
+    {
+        return await RequestHelper.ExchangeRate(from, to, ApiKey) * amount;
+    }
+}
